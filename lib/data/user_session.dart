@@ -292,21 +292,18 @@ class UserSession {
     String? email,
     String? profileImagePath,
   }) async {
-    final provider = providerNotifier.value;
-    provider.name = name;
-    provider.profession = profession;
-    provider.serviceCategory =
-        serviceCategory ?? CategoryHelper.normalizeCategory(profession);
-    provider.bio = bio;
-    provider.experienceYears = experienceYears;
-    provider.phone = phone;
-    if (email != null && email.isNotEmpty) {
-      provider.email = email;
-    }
-    if (profileImagePath != null) {
-      provider.profileImagePath = profileImagePath;
-    }
-    providerNotifier.value = provider;
+    final current = providerNotifier.value;
+    providerNotifier.value = current.copyWith(
+      name: name,
+      profession: profession,
+      serviceCategory:
+          serviceCategory ?? CategoryHelper.normalizeCategory(profession),
+      bio: bio,
+      experienceYears: experienceYears,
+      phone: phone,
+      email: (email != null && email.isNotEmpty) ? email : current.email,
+      profileImagePath: profileImagePath ?? current.profileImagePath,
+    );
     await _saveProviderToLocalDb();
   }
 
@@ -316,12 +313,17 @@ class UserSession {
     await _saveProviderToLocalDb();
   }
 
-  /// تبديل حالة توفر مزود الخدمة (متاح / غير متاح)
+  /// تبديل حالة توفر مزود الخدمة (متاح / غير متاح) باستجابة فورية (0ms)
   static Future<void> toggleProviderAvailability(bool available) async {
-    final provider = providerNotifier.value;
-    provider.isAvailable = available;
-    providerNotifier.value = provider;
-    await _saveProviderToLocalDb();
+    final current = providerNotifier.value;
+    // تحديث فوري للواجهة بإنشاء كائن جديد يستشعره ValueNotifier فورياً دون أي تأخير
+    providerNotifier.value = current.copyWith(isAvailable: available);
+
+    // حفظ في قاعدة البيانات المحلية والسحابية في الخلفية
+    _saveProviderToLocalDb();
+    if (current.id.isNotEmpty && current.id != 'provider_guest') {
+      FirestoreService.saveProvider(providerNotifier.value);
+    }
   }
 
   /// تسجيل الخروج

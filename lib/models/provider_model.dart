@@ -54,4 +54,48 @@ class ProviderModel {
     this.email = 'provider@khidma.com',
     this.profileImagePath,
   });
+
+  ProviderModel copyWith({
+    String? id,
+    String? name,
+    String? profession,
+    String? serviceCategory,
+    int? experienceYears,
+    double? rating,
+    int? completedJobs,
+    int? reviewsCount,
+    String? bio,
+    bool? isVerified,
+    bool? isAvailable,
+    List<String>? certificates,
+    List<PreviousWork>? previousWorks,
+    Map<String, bool>? availableDays,
+    String? startTime,
+    String? endTime,
+    String? phone,
+    String? email,
+    String? profileImagePath,
+  }) {
+    return ProviderModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      profession: profession ?? this.profession,
+      serviceCategory: serviceCategory ?? this.serviceCategory,
+      experienceYears: experienceYears ?? this.experienceYears,
+      rating: rating ?? this.rating,
+      completedJobs: completedJobs ?? this.completedJobs,
+      reviewsCount: reviewsCount ?? this.reviewsCount,
+      bio: bio ?? this.bio,
+      isVerified: isVerified ?? this.isVerified,
+      isAvailable: isAvailable ?? this.isAvailable,
+      certificates: certificates ?? this.certificates,
+      previousWorks: previousWorks ?? this.previousWorks,
+      availableDays: availableDays ?? this.availableDays,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      profileImagePath: profileImagePath ?? this.profileImagePath,
+    );
+  }
 }

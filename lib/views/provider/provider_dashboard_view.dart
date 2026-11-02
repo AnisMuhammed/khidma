@@ -128,9 +128,9 @@ class ProviderDashboardView extends StatelessWidget {
                   child: SwitchListTile(
                     value: isAvail,
                     activeThumbColor: colors.primary,
-                    onChanged: (value) async {
-                      await UserSession.toggleProviderAvailability(value);
-                      if (!context.mounted) return;
+                    onChanged: (value) {
+                      UserSession.toggleProviderAvailability(value);
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
@@ -148,6 +148,7 @@ class ProviderDashboardView extends StatelessWidget {
                               ? const Color(0xFF0F766E)
                               : Colors.orange,
                           duration: const Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
                         ),
                       );
                     },

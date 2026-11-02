@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/localization/app_strings.dart';
 import '../../core/routes/app_routes.dart';
+import '../../data/user_session.dart';
 import '../../services/auth_service.dart';
 import 'widgets/account_type_button.dart';
 import 'widgets/social_login_buttons.dart';
@@ -60,7 +61,7 @@ class _LoginViewState extends State<LoginView> {
       if (!mounted) return;
 
       if (success) {
-        if (_accountType == 'provider') {
+        if (UserSession.currentUserRole == 'provider') {
           Navigator.pushNamedAndRemoveUntil(
             context,
             AppRoutes.providerDashboard,
@@ -73,6 +74,13 @@ class _LoginViewState extends State<LoginView> {
             (route) => false,
           );
         }
+      } else {
+        _showError(
+          AppStrings.t(
+            'تعذر تسجيل الدخول، يرجى التأكد من صحة البريد وكلمة المرور',
+            'Could not sign in, please check your email and password',
+          ),
+        );
       }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
@@ -111,7 +119,7 @@ class _LoginViewState extends State<LoginView> {
       if (!mounted) return;
 
       if (success) {
-        if (_accountType == 'provider') {
+        if (UserSession.currentUserRole == 'provider') {
           Navigator.pushNamedAndRemoveUntil(
             context,
             AppRoutes.providerDashboard,
@@ -124,6 +132,13 @@ class _LoginViewState extends State<LoginView> {
             (route) => false,
           );
         }
+      } else {
+        _showError(
+          AppStrings.t(
+            'تعذر تسجيل الدخول، يرجى التأكد من صحة البريد وكلمة المرور',
+            'Could not sign in, please check your email and password',
+          ),
+        );
       }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
@@ -162,7 +177,7 @@ class _LoginViewState extends State<LoginView> {
       if (!mounted) return;
 
       if (success) {
-        if (_accountType == 'provider') {
+        if (UserSession.currentUserRole == 'provider') {
           Navigator.pushNamedAndRemoveUntil(
             context,
             AppRoutes.providerDashboard,
@@ -175,6 +190,13 @@ class _LoginViewState extends State<LoginView> {
             (route) => false,
           );
         }
+      } else {
+        _showError(
+          AppStrings.t(
+            'تعذر تسجيل الدخول، يرجى التأكد من صحة البريد وكلمة المرور',
+            'Could not sign in, please check your email and password',
+          ),
+        );
       }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
@@ -218,11 +240,19 @@ class _LoginViewState extends State<LoginView> {
       if (!mounted) return;
 
       if (success) {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRoutes.main,
-          (route) => false,
-        );
+        if (UserSession.currentUserRole == 'provider') {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRoutes.providerDashboard,
+            (route) => false,
+          );
+        } else {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRoutes.main,
+            (route) => false,
+          );
+        }
       } else {
         _showError(
           AppStrings.t('تعذر التحقق بالبصمة', 'Biometric verification failed'),

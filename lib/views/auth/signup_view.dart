@@ -77,11 +77,11 @@ class _SignupViewState extends State<SignupView> {
             SnackBar(
               content: Text(
                 AppStrings.t(
-                  'تم إنشاء الحساب بنجاح! يرجى إكمال بيانات مزود الخدمة',
-                  'Account created successfully! Please complete your service provider details',
+                  'تم إنشاء الحساب بنجاح! يرجى إكمال بيانات ملفك المهني',
+                  'Account created successfully! Please complete your professional profile',
                 ),
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: const Color(0xFF0F766E),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -95,21 +95,28 @@ class _SignupViewState extends State<SignupView> {
             SnackBar(
               content: Text(
                 AppStrings.t(
-                  'تم إنشاء الحساب بنجاح! يرجى تسجيل الدخول بحسابك الجديد',
-                  'Account created successfully! Please sign in with your new account',
+                  'مرحباً بك في خِدْمَة! تم إنشاء الحساب بنجاح',
+                  'Welcome to Khidma! Account created successfully',
                 ),
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: const Color(0xFF0F766E),
               duration: const Duration(seconds: 3),
               behavior: SnackBarBehavior.floating,
             ),
           );
           Navigator.pushNamedAndRemoveUntil(
             context,
-            AppRoutes.login,
+            AppRoutes.main,
             (route) => false,
           );
         }
+      } else {
+        _showError(
+          AppStrings.t(
+            'حدث خطأ أثناء إنشاء الحساب، يرجى المحاولة مرة أخرى',
+            'An error occurred while creating the account, please try again',
+          ),
+        );
       }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;

@@ -100,12 +100,13 @@ class _ProviderSetupViewState extends State<ProviderSetupView> {
     final bio = descriptionController.text.trim();
     final phone = whatsappController.text.trim();
 
-    // الحصول على UID الحقيقي من Firebase Auth
-    final firebaseUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    // الحصول على UID الحقيقي من Firebase Auth أو الجلسة
+    final firebaseUid =
+        FirebaseAuth.instance.currentUser?.uid ?? UserSession.currentProvider.id;
 
     final provider = UserSession.currentProvider;
     // تعيين ID الحقيقي من Firebase Auth
-    if (firebaseUid.isNotEmpty) {
+    if (firebaseUid.isNotEmpty && firebaseUid != 'provider_guest') {
       provider.id = firebaseUid;
     }
     provider.profession = chosenService;
@@ -144,8 +145,12 @@ class _ProviderSetupViewState extends State<ProviderSetupView> {
     );
 
     // حفظ في Firestore و SQLite بالـ UID الصحيح
-    await FirestoreService.saveProvider(provider);
-    await SqliteService.insertOrUpdateProvider(provider);
+    try {
+      await FirestoreService.saveProvider(provider);
+      await SqliteService.insertOrUpdateProvider(provider);
+    } catch (e) {
+      debugPrint('Error saving provider setup: $e');
+    }
 
     if (!mounted) return;
 
@@ -153,11 +158,11 @@ class _ProviderSetupViewState extends State<ProviderSetupView> {
       SnackBar(
         content: Text(
           AppStrings.t(
-            'تم تجهيز ملفك المهني بنجاح! سجّل الدخول الآن للبدء',
-            'Your professional profile is ready! Sign in now to get started',
+            'تم تجهيز ملفك المهني بنجاح! مرحباً بك في لوحة التحكم',
+            'Your professional profile is ready! Welcome to your dashboard',
           ),
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: const Color(0xFF0F766E),
         duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
       ),
@@ -165,7 +170,7 @@ class _ProviderSetupViewState extends State<ProviderSetupView> {
 
     Navigator.pushNamedAndRemoveUntil(
       context,
-      AppRoutes.login,
+      AppRoutes.providerDashboard,
       (route) => false,
     );
   }

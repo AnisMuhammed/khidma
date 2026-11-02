@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/utils/category_helper.dart';
@@ -140,6 +141,17 @@ class UserSession {
       }
 
       providerNotifier.value = provider;
+
+      // مزامنة المعرف الحقيقي مع مستخدم Firebase الحالي إن وجد
+      final fbUser = FirebaseAuth.instance.currentUser;
+      if (fbUser != null) {
+        isLoggedIn = true;
+        if (currentUserRole == 'provider') {
+          provider.id = fbUser.uid;
+        } else {
+          clientNotifier.value = clientNotifier.value.copyWith(id: fbUser.uid);
+        }
+      }
     } catch (e) {
       debugPrint('Error initializing UserSession: $e');
     }
@@ -331,6 +343,9 @@ class UserSession {
     isLoggedIn = false;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyIsLoggedIn, false);
+    try {
+      await FirebaseAuth.instance.signOut();
+    } catch (_) {}
   }
 
   /// حفظ بيانات العميل محلياً وسحابياً

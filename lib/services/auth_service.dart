@@ -8,13 +8,12 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../core/localization/app_strings.dart';
 import '../data/user_session.dart';
 import '../models/user_model.dart';
-import '../repositories/user_repository.dart';
 import 'biometric_service.dart';
+import 'firestore_service.dart';
+import 'sqlite_service.dart';
 
 class AuthService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  static final UserRepository _userRepository = UserRepository();
 
   // ============================================================
   // Email + Password Login
@@ -38,18 +37,23 @@ class AuthService {
         return false;
       }
 
-      // 2. الحصول على UID من Firebase Authentication
       final String uid = user.uid;
-
       debugPrint('Firebase UID: $uid');
 
-      // 3. جلب بيانات المستخدم من Firestore
-      UserModel? userModel = await _userRepository.getUser(uid);
+      // 2. جلب بيانات المستخدم بمهلة زمنية وبالاعتماد على الكاش المحلي لـ SQLite
+      UserModel? userModel;
+      try {
+        userModel = await FirestoreService.getUser(uid).timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => SqliteService.getUser(uid),
+        );
+      } catch (e) {
+        debugPrint('Error getting user from Firestore, falling back to SQLite: $e');
+        userModel = await SqliteService.getUser(uid);
+      }
 
+      // 3. إذا لم يوجد مستند مسبق في Firestore (مثل مستخدمين مسجلين مسبقاً)
       if (userModel == null) {
-        debugPrint('لم يتم العثور على بيانات المستخدم في Firestore — ننشئ المستند تلقائياً.');
-
-        // إنشاء مستند Firestore تلقائياً للحسابات القديمة
         final displayName = user.displayName?.trim() ?? '';
         final autoName = displayName.isNotEmpty
             ? displayName
@@ -62,39 +66,38 @@ class AuthService {
           phone: '',
           role: role,
         );
-        await _userRepository.createUser(userModel);
+        await FirestoreService.saveUser(userModel);
         debugPrint('تم إنشاء مستند Firestore للمستخدم: $uid');
       }
 
-      // 4. التأكد من أن نوع الحساب المختار يطابق
-      // نوع الحساب الموجود في Firestore
-      if (userModel.role != role) {
-        debugPrint(
-          'نوع الحساب غير مطابق. '
-          'Firestore: ${userModel.role} '
-          '| Selected: $role',
-        );
+      // 4. التعرف الذكي على الدور الفعلي المسجل للحساب في قاعدة البيانات
+      final actualRole = userModel.role.isNotEmpty ? userModel.role : role;
+      UserSession.currentUserRole = actualRole;
 
-        await _auth.signOut();
-        return false;
-      }
-
-      // 5. حفظ بيانات المستخدم في الجلسة مع تعيين الـ UID الحقيقي
-      if (userModel.role == 'provider') {
-        // تحديث الـ UID في جلسة المزود
+      // 5. حفظ بيانات المستخدم في الجلسة واسترجاع ملفه بحسب دوره الفعلي
+      if (actualRole == 'provider') {
         UserSession.currentProvider.id = uid;
+        try {
+          final savedProvider = await FirestoreService.getProviderById(uid) ??
+              await SqliteService.getProviderById(uid);
+          if (savedProvider != null) {
+            UserSession.providerNotifier.value = savedProvider;
+          }
+        } catch (_) {}
+
         await UserSession.loginAsProvider(
           name: userModel.name,
           emailOrPhone: userModel.email,
           phone: userModel.phone,
         );
       } else {
-        // تحديث جلسة العميل مع الـ UID الحقيقي
-        UserSession.clientNotifier.value = UserSession.clientNotifier.value.copyWith(
+        UserSession.clientNotifier.value =
+            UserSession.clientNotifier.value.copyWith(
           id: uid,
           name: userModel.name,
           email: userModel.email,
           phone: userModel.phone,
+          role: 'client',
         );
         await UserSession.loginAsClient(
           name: userModel.name,
@@ -124,7 +127,7 @@ class AuthService {
     required String role,
   }) async {
     try {
-      // إنشاء الحساب في Firebase Authentication
+      // 1. إنشاء الحساب في Firebase Authentication
       final UserCredential credential = await _auth
           .createUserWithEmailAndPassword(
             email: email.trim(),
@@ -137,10 +140,10 @@ class AuthService {
         return false;
       }
 
-      // حفظ اسم المستخدم في Firebase Authentication
+      // 2. حفظ اسم المستخدم في Firebase Authentication
       await user.updateDisplayName(name.trim());
 
-      // حفظ بيانات المستخدم في Firestore حتى يعمل تسجيل الدخول لاحقاً
+      // 3. حفظ بيانات المستخدم في Firestore و SQLite فوراً
       final UserModel userModel = UserModel(
         id: user.uid,
         name: name.trim(),
@@ -148,13 +151,34 @@ class AuthService {
         phone: phone.trim(),
         role: role,
       );
-      await _userRepository.createUser(userModel);
+      await FirestoreService.saveUser(userModel);
 
-      debugPrint('User saved to Firestore: ${user.uid}');
+      debugPrint('User saved to Firestore & SQLite: ${user.uid} with role: $role');
 
-      // تسجيل الخروج بعد إنشاء الحساب
-      // حتى يعود المستخدم إلى شاشة Login
-      await _auth.signOut();
+      // 4. إبقاء الجلسة نشطة وحفظ المعرف الحقيقي UID
+      UserSession.currentUserRole = role;
+      if (role == 'provider') {
+        UserSession.currentProvider.id = user.uid;
+        await UserSession.loginAsProvider(
+          name: name.trim(),
+          emailOrPhone: email.trim(),
+          phone: phone.trim(),
+        );
+      } else {
+        UserSession.clientNotifier.value =
+            UserSession.clientNotifier.value.copyWith(
+          id: user.uid,
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          role: 'client',
+        );
+        await UserSession.loginAsClient(
+          name: name.trim(),
+          emailOrPhone: email.trim(),
+          phone: phone.trim(),
+        );
+      }
 
       return true;
     } on FirebaseAuthException {
@@ -230,9 +254,40 @@ class AuthService {
 
       final String email = user.email ?? '';
 
-      if (role == 'provider') {
+      // جلب الدور الحقيقي من Firestore أو إنشاؤه
+      UserModel? userModel = await FirestoreService.getUser(user.uid);
+      final actualRole = userModel?.role ?? role;
+      if (userModel == null) {
+        userModel = UserModel(
+          id: user.uid,
+          name: name,
+          email: email,
+          phone: '',
+          role: actualRole,
+        );
+        await FirestoreService.saveUser(userModel);
+      }
+      UserSession.currentUserRole = actualRole;
+
+      if (actualRole == 'provider') {
+        UserSession.currentProvider.id = user.uid;
+        try {
+          final savedProvider = await FirestoreService.getProviderById(user.uid) ??
+              await SqliteService.getProviderById(user.uid);
+          if (savedProvider != null) {
+            UserSession.providerNotifier.value = savedProvider;
+          }
+        } catch (_) {}
         await UserSession.loginAsProvider(name: name, emailOrPhone: email);
       } else {
+        UserSession.clientNotifier.value =
+            UserSession.clientNotifier.value.copyWith(
+          id: user.uid,
+          name: name,
+          email: email,
+          phone: '',
+          role: 'client',
+        );
         await UserSession.loginAsClient(name: name, emailOrPhone: email);
       }
 
@@ -315,9 +370,40 @@ class AuthService {
 
       final String email = user.email ?? '';
 
-      if (role == 'provider') {
+      // جلب الدور الحقيقي من Firestore أو إنشاؤه
+      UserModel? userModel = await FirestoreService.getUser(user.uid);
+      final actualRole = userModel?.role ?? role;
+      if (userModel == null) {
+        userModel = UserModel(
+          id: user.uid,
+          name: name,
+          email: email,
+          phone: '',
+          role: actualRole,
+        );
+        await FirestoreService.saveUser(userModel);
+      }
+      UserSession.currentUserRole = actualRole;
+
+      if (actualRole == 'provider') {
+        UserSession.currentProvider.id = user.uid;
+        try {
+          final savedProvider = await FirestoreService.getProviderById(user.uid) ??
+              await SqliteService.getProviderById(user.uid);
+          if (savedProvider != null) {
+            UserSession.providerNotifier.value = savedProvider;
+          }
+        } catch (_) {}
         await UserSession.loginAsProvider(name: name, emailOrPhone: email);
       } else {
+        UserSession.clientNotifier.value =
+            UserSession.clientNotifier.value.copyWith(
+          id: user.uid,
+          name: name,
+          email: email,
+          phone: '',
+          role: 'client',
+        );
         await UserSession.loginAsClient(name: name, emailOrPhone: email);
       }
 

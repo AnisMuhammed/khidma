@@ -9,7 +9,6 @@ import 'core/theme/app_theme.dart';
 
 import 'views/auth/login_view.dart';
 import 'views/onboarding/onboarding_view.dart';
-import 'views/splash/splash_view.dart';
 import 'views/auth/signup_view.dart';
 import 'views/auth/forgot_password_view.dart';
 
@@ -121,11 +120,13 @@ class KhidmaApp extends StatelessWidget {
                 );
               },
 
-              initialRoute: AppRoutes.splash,
+              initialRoute: UserSession.isLoggedIn
+                  ? (UserSession.currentUserRole == 'provider'
+                      ? AppRoutes.providerDashboard
+                      : AppRoutes.main)
+                  : AppRoutes.onboarding,
 
               routes: {
-                AppRoutes.splash: (context) => const SplashView(),
-
                 AppRoutes.onboarding: (context) => const OnboardingView(),
 
                 AppRoutes.login: (context) => const LoginView(),

@@ -31,16 +31,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  flutter_native_splash: ^2.4.4
   flutter_launcher_icons: ^0.14.4
-
-flutter_native_splash:
-  color: "#0F766E"
-  color_dark: "#0F172A"
-  image: assets/images/logo/khidma_logo.png
-  android: true
-  ios: true
-  web: false
 
 # ---------------------------------------------------------------------------
 # أيقونة التطبيق — تُولَّد من شعار خِدْمَة نفسه المستخدم في شاشة البداية،

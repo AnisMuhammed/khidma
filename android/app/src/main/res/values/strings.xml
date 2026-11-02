@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- الاسم الافتراضي على أي جهاز لغته غير العربية -->
+    <string name="app_name">Khidma</string>
+
+    <!-- إعدادات Facebook Login. هذه معرّفات تقنية لا تظهر للمستخدم ولا تُترجم،
+         فتكفي نسخة واحدة هنا؛ وأندرويد يرجع إليها تلقائياً على الأجهزة العربية.
+         (translatable="false" يمنع Lint من المطالبة بترجمتها.) -->
+    <string name="facebook_app_id" translatable="false">1556287305756771</string>
+    <string name="fb_login_protocol_scheme" translatable="false">fb1556287305756771</string>
+
+    <!-- ⚠️ الصق هنا Client Token الخاص بتطبيق Meta، من:
+         Meta App Dashboard → Settings → Advanced → Security → Client Token
+         لا تبنِ التطبيق قبل لصق القيمة، فبدونها يفشل تسجيل الدخول بفيسبوك. -->
+    <string name="facebook_client_token" translatable="false">aa1848f388edb42ba5cd86a559c80051</string>
+</resources>

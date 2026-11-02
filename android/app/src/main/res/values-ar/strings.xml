@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- يظهر تلقائياً على الأجهزة التي لغتها عربية -->
+    <string name="app_name">خِدْمَة</string>
+</resources>

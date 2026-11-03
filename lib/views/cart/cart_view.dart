@@ -59,6 +59,10 @@ class _CartViewState extends State<CartView> {
         body: ListenableBuilder(
           listenable: _viewModel,
           builder: (context, _) {
+            if (_viewModel.isLoading && _viewModel.itemCount == 0) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
             if (_viewModel.itemCount == 0) {
               return Center(
                 child: Padding(

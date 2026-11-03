@@ -408,4 +408,35 @@ class FirestoreService {
       debugPrint('Firestore addReview error: $e');
     }
   }
+
+  // ============================================================
+  // المفضلة (Favorites Sync)
+  // ============================================================
+
+  static Future<List<String>> getFavorites(String userId) async {
+    try {
+      final doc = await _usersRef.doc(userId).get();
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data() as Map<String, dynamic>;
+        final favList = data['favorites'] as List?;
+        if (favList != null) {
+          return favList.map((e) => e.toString()).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Firestore getFavorites error: $e');
+    }
+    return [];
+  }
+
+  static Future<void> syncFavorites(String userId, List<String> favorites) async {
+    try {
+      await _usersRef.doc(userId).set({
+        'favorites': favorites,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Firestore syncFavorites error: $e');
+    }
+  }
 }

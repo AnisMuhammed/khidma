@@ -3,9 +3,9 @@ import '../../core/localization/app_language_manager.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/routes/app_routes.dart';
 import '../../data/categories_data.dart';
-import '../../data/services_data.dart';
 import '../../models/service_model.dart';
 import '../../repositories/favorite_repository.dart';
+import '../../repositories/service_repository.dart';
 import '../services/service_details_view.dart';
 import '../cart/cart_view.dart';
 
@@ -193,16 +193,21 @@ class HomeView extends StatelessWidget {
                   SliverToBoxAdapter(
                     child: SizedBox(
                       height: 115,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: serviceCategories.length,
-                        itemBuilder: (context, index) {
-                          final category = serviceCategories[index];
+                      child: ValueListenableBuilder<List<ServiceCategory>>(
+                        valueListenable: ServiceRepository.categoriesNotifier,
+                        builder: (context, categories, _) {
+                          return ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            scrollDirection: Axis.horizontal,
+                            itemCount: categories.length,
+                            itemBuilder: (context, index) {
+                              final category = categories[index];
 
-                          return _Category(
-                            icon: category.icon,
-                            title: category.name,
+                              return _Category(
+                                icon: category.icon,
+                                title: category.name,
+                              );
+                            },
                           );
                         },
                       ),
@@ -214,33 +219,41 @@ class HomeView extends StatelessWidget {
                       title: AppStrings.tr('popular_services'),
                     ),
                   ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-                    sliver: SliverGrid(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final service = servicesData[index];
+                  ValueListenableBuilder<List<ServiceModel>>(
+                    valueListenable: ServiceRepository.servicesNotifier,
+                    builder: (context, services, _) {
+                      return SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+                        sliver: SliverGrid(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final service = services[index];
 
-                        return _ServiceCard(
-                          service: service,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    ServiceDetailsView(service: service),
-                              ),
-                            );
-                          },
-                        );
-                      }, childCount: servicesData.length),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
+                              return _ServiceCard(
+                                service: service,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          ServiceDetailsView(service: service),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                            childCount: services.length,
+                          ),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 14,
                             mainAxisSpacing: 14,
                             childAspectRatio: .78,
                           ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../core/utils/category_helper.dart';
+import '../data/categories_data.dart';
 import '../models/order_model.dart';
 import '../models/provider_model.dart';
 import '../models/rating_model.dart';
+import '../models/service_model.dart';
 import '../models/user_model.dart';
 import 'sqlite_service.dart';
 
@@ -16,6 +18,10 @@ class FirestoreService {
   static CollectionReference get _ordersRef => _firestore.collection('orders');
   static CollectionReference get _reviewsRef =>
       _firestore.collection('reviews');
+  static CollectionReference get _servicesRef =>
+      _firestore.collection('services');
+  static CollectionReference get _categoriesRef =>
+      _firestore.collection('categories');
 
   // ============================================================
   // المستخدمين (Users)
@@ -438,5 +444,42 @@ class FirestoreService {
     } catch (e) {
       debugPrint('Firestore syncFavorites error: $e');
     }
+  }
+
+  // ============================================================
+  // الخدمات والتصنيفات (Dynamic Services & Categories)
+  // ============================================================
+
+  static Future<List<ServiceModel>> getServices() async {
+    try {
+      final snap = await _servicesRef.get();
+      if (snap.docs.isNotEmpty) {
+        return snap.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return ServiceModel.fromJson({
+            ...data,
+            'id': data['id'] ?? doc.id,
+          });
+        }).toList();
+      }
+    } catch (e) {
+      debugPrint('Firestore getServices error: $e');
+    }
+    return [];
+  }
+
+  static Future<List<ServiceCategory>> getCategories() async {
+    try {
+      final snap = await _categoriesRef.get();
+      if (snap.docs.isNotEmpty) {
+        return snap.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return ServiceCategory.fromJson(data);
+        }).toList();
+      }
+    } catch (e) {
+      debugPrint('Firestore getCategories error: $e');
+    }
+    return [];
   }
 }

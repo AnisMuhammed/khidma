@@ -29,9 +29,9 @@ class _SearchViewState extends State<SearchView> {
 
   void _onSearchChanged(String val) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 375), () {
+    _debounce = Timer(const Duration(milliseconds: 350), () {
       if (mounted) {
-        _viewModel.search(val);
+        _viewModel.search(val, saveToRecent: false);
       }
     });
   }
@@ -67,7 +67,7 @@ class _SearchViewState extends State<SearchView> {
                     onChanged: _onSearchChanged,
                     onSubmitted: (val) {
                       _debounce?.cancel();
-                      _viewModel.search(val);
+                      _viewModel.search(val, saveToRecent: true);
                     },
                     decoration: InputDecoration(
                       hintText: AppStrings.tr('search_hint'),
@@ -77,7 +77,7 @@ class _SearchViewState extends State<SearchView> {
                               onPressed: () {
                                 _debounce?.cancel();
                                 _controller.clear();
-                                _viewModel.search('');
+                                _viewModel.search('', saveToRecent: false);
                               },
                               icon: const Icon(Icons.clear_rounded),
                             )

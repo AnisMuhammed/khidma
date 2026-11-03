@@ -52,6 +52,7 @@ import 'core/localization/app_language_manager.dart';
 import 'data/user_session.dart';
 import 'services/sqlite_service.dart';
 import 'services/notification_service.dart';
+import 'repositories/service_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,6 +65,9 @@ Future<void> main() async {
 
   // Local Preferences & Cache
   await LocalDbService.init();
+
+  // Services & Categories Dynamic Sync
+  ServiceRepository.init();
 
   // Favorites (Local DB & SQLite Sync)
   await FavoriteRepository.init();

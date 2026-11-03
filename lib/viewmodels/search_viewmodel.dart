@@ -29,13 +29,13 @@ class SearchViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> search(String query) async {
+  Future<void> search(String query, {bool saveToRecent = false}) async {
     _currentQuery = query;
     _isLoading = true;
     notifyListeners();
 
     _results = await _repository.searchServices(query);
-    if (query.trim().isNotEmpty) {
+    if (saveToRecent && query.trim().length >= 2) {
       await LocalDbService.addRecentSearch(query.trim());
       loadRecentSearches();
     }

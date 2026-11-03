@@ -418,6 +418,18 @@ class ProviderProfileClientView extends StatelessWidget {
                         ),
                         FilledButton.tonalIcon(
                           onPressed: () {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.chat,
+                              arguments: provider,
+                            );
+                          },
+                          icon: const Icon(Icons.chat_outlined, size: 18),
+                          label: Text(AppStrings.t('محادثة', 'Chat')),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton.tonalIcon(
+                          onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(

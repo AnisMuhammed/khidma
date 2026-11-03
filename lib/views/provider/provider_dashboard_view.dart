@@ -257,6 +257,17 @@ class ProviderDashboardView extends StatelessWidget {
               },
             ),
             _DashboardTile(
+              icon: Icons.chat_bubble_outline_rounded,
+              title: AppStrings.t('المحادثات والرسائل', 'Messages & Chat'),
+              subtitle: AppStrings.t(
+                'تواصل مباشر مع العملاء والرد على الاستفسارات',
+                'Direct communication with clients and inquiries',
+              ),
+              onTap: () {
+                Navigator.pushNamed(context, AppRoutes.providerChatInbox);
+              },
+            ),
+            _DashboardTile(
               icon: Icons.person_rounded,
               title: AppStrings.t('ملف مزود الخدمة', 'Provider profile'),
               subtitle: AppStrings.t(

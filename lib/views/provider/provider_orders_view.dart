@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/localization/app_strings.dart';
+import '../../core/routes/app_routes.dart';
 import '../../data/orders_data.dart';
 import '../../models/order_model.dart';
 import '../../viewmodels/order_viewmodel.dart';
@@ -310,6 +311,19 @@ class _OrderCard extends StatelessWidget {
                   ),
                 ),
                 _StatusBadge(status: order.status),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Icons.chat_outlined, size: 20),
+                  color: Theme.of(context).colorScheme.primary,
+                  tooltip: AppStrings.t('محادثة العميل', 'Chat with client'),
+                  onPressed: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.chat,
+                      arguments: order,
+                    );
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 16),

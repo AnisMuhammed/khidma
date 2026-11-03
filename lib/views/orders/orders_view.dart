@@ -211,6 +211,22 @@ class _OrdersViewState extends State<OrdersView> {
                                       ],
                                     ),
                                   ),
+                                  const SizedBox(width: 4),
+                                  IconButton(
+                                    icon: const Icon(Icons.chat_outlined, size: 20),
+                                    color: colors.primary,
+                                    tooltip: AppStrings.t(
+                                      'محادثة المزود',
+                                      'Chat with provider',
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pushNamed(
+                                        context,
+                                        AppRoutes.chat,
+                                        arguments: order,
+                                      );
+                                    },
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 10),
